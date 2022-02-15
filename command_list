@@ -1,0 +1,5 @@
+grpc_cli call localhost:50051 PancakeBakerService.Bake "menu:1"
+grpc_cli call localhost:50051 PancakeBakerService.Report ""
+
+grpcurl -plaintext -import-path . -proto proto/pancake.proto -d '{ "menu": 1 }' -H "Authorization: bearer hi/mi/tsu" localhost:50051 package.name.PancakeBakerService.Bake
+grpcurl -plaintext -import-path . -proto proto/pancake.proto -d '{}' -H "Authorization: bearer hi/mi/tsu" localhost:50051 package.name.PancakeBakerService.Report

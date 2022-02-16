@@ -7,11 +7,10 @@ import (
 	"os"
 	"os/signal"
 
-	"image.upload/gen/pb"
-	"image.upload/handler"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"image.upload/gen/pb"
+	"image.upload/handler"
 )
 
 func main() {
@@ -27,7 +26,7 @@ func main() {
 	reflection.Register(server)
 
 	go func() {
-		log.Fatalf("start gRPC server port: %v", port)
+		log.Printf("start gRPC server port: %v", port)
 		server.Serve(lis)
 	}()
 

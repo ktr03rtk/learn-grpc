@@ -57,7 +57,7 @@ func (h *ImageUploadHandler) Upload(stream pb.ImageUploadService_UploadServer) e
 	data := buf.Bytes()
 	mimeType := http.DetectContentType(data)
 
-	h.files[fileName] = data
+	h.files[uuid] = data
 
 	err = stream.SendAndClose(&pb.ImageUploadResponse{
 		Uuid:        uuid,

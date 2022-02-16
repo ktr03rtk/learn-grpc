@@ -1,3 +1,5 @@
+protoc -Iproto --go_out=plugins=grpc:api proto/*.proto
+
 grpc_cli call localhost:50051 PancakeBakerService.Bake "menu:1"
 grpc_cli call localhost:50051 PancakeBakerService.Report ""
 

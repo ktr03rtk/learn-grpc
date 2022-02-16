@@ -63,7 +63,7 @@ func auth(ctx context.Context) (context.Context, error) {
 		return nil, err
 	}
 
-	if token != "hi/mi/tsu" {
+	if token != "secretword" {
 		return nil, grpc.Errorf(codes.Unauthenticated, "invalid bearer token")
 	}
 

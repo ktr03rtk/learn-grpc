@@ -17,6 +17,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer h.Close()
 
 	scanner := bufio.NewScanner(os.Stdin)
 

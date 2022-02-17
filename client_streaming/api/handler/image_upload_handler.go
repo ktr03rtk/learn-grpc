@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/google/uuid"
@@ -21,6 +23,8 @@ func NewImageUploadHandler() *ImageUploadHandler {
 	}
 }
 
+const outputDir = "output"
+
 func (h *ImageUploadHandler) Upload(stream pb.ImageUploadService_UploadServer) error {
 	req, err := stream.Recv()
 	if err != nil {
@@ -36,8 +40,16 @@ func (h *ImageUploadHandler) Upload(stream pb.ImageUploadService_UploadServer) e
 	}
 
 	uuid := u.String()
-
 	buf := &bytes.Buffer{}
+
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(filepath.Join(outputDir, fileName), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 
 	for {
 		r, err := stream.Recv()
@@ -50,6 +62,10 @@ func (h *ImageUploadHandler) Upload(stream pb.ImageUploadService_UploadServer) e
 		chunk := r.GetData()
 		_, err = buf.Write(chunk)
 		if err != nil {
+			return err
+		}
+
+		if _, err := f.Write(chunk); err != nil {
 			return err
 		}
 	}

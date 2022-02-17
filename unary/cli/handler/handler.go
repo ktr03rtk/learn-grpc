@@ -10,8 +10,8 @@ import (
 )
 
 type Handler interface {
-	Bake(int) (sring error)
-	Report() (string error)
+	Bake(int) (string, error)
+	Report() (string, error)
 	Close()
 }
 
@@ -21,7 +21,7 @@ type handler struct {
 	context.Context
 }
 
-func NewHandler() (*handler, error) {
+func NewHandler() (Handler, error) {
 	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect")

@@ -1,14 +1,11 @@
 package main
 
 import (
-	"client/gen/pb"
-	"context"
+	"client/handler"
 	"fmt"
 	"io"
 	"log"
 	"os"
-
-	"google.golang.org/grpc"
 )
 
 const (
@@ -19,26 +16,14 @@ const (
 func main() {
 	fmt.Println("Image upload start")
 
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	h, err := handler.NewHandler()
 	if err != nil {
-		log.Fatalf("failed to connect: %v", err)
+		log.Fatal(err)
 	}
-	defer conn.Close()
-	c := pb.NewImageUploadServiceClient(conn)
+	defer h.Close()
 
-	client, err := c.Upload(context.Background())
-	if err != nil {
-		log.Fatalf("failed to upload: %v", err)
-	}
-
-	if err := client.Send(&pb.ImageUploadRequest{
-		File: &pb.ImageUploadRequest_FileMeta_{
-			FileMeta: &pb.ImageUploadRequest_FileMeta{
-				Filename: fileName,
-			},
-		},
-	}); err != nil {
-		log.Fatalf("failed to send filename: %v", err)
+	if err := h.SendMetaData(fileName); err != nil {
+		log.Fatal(err)
 	}
 
 	fp, err := os.Open(fileName)
@@ -48,7 +33,7 @@ func main() {
 	defer fp.Close()
 
 	buf := make([]byte, bufferSize)
-	i := 0
+
 	for {
 		_, err := fp.Read(buf)
 		if err == io.EOF {
@@ -57,24 +42,18 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("---------------count %+v\n", i)
-		i++
 
-		if err := client.Send(&pb.ImageUploadRequest{
-			File: &pb.ImageUploadRequest_Data{
-				Data: buf,
-			},
-		}); err != nil {
-			log.Fatalf("failed to send data: %v", err)
+		if err := h.SendData(buf); err != nil {
+			log.Fatal(err)
 		}
 	}
 
-	res, err := client.CloseAndRecv()
+	res, err := h.CloseAndRecv()
 	if err != nil {
-		log.Fatalf("failed to receive data: %v", err)
+		log.Fatal(err)
 	}
 
-	fmt.Printf("--------------- %+v\n", res.String())
+	fmt.Printf("--------------- %+v\n", res)
 
-	fmt.Println("Image upload finished")
+	fmt.Println("Image upload success")
 }

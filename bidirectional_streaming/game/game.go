@@ -64,28 +64,28 @@ func (g *Game) Display(me Color) {
 		fmt.Printf("You: %v\n", ColorToStr(me))
 	}
 
-	fmt.Print(" |")
-	rs := []rune("ABCDEFGH")
+	fmt.Print(" ｜")
+	rs := []rune("ＡＢＣＤＥＦＧＨ")
 	for i, r := range rs {
 		fmt.Printf("%v", string(r))
 		if i < len(rs)-1 {
-			fmt.Print("|")
+			fmt.Print("｜")
 		}
 	}
 	fmt.Print("\n")
-	fmt.Println("----------")
+	fmt.Println("ーーーーーーーーーーーーーー")
 
 	for j := 1; j < 9; j++ {
 		fmt.Printf("%d", j)
-		fmt.Print("|")
+		fmt.Print("｜")
 
 		for i := 1; i < 9; i++ {
 			fmt.Print(ColorToStr(g.Board.Cells[i][j]))
-			fmt.Print("|")
+			fmt.Print("｜")
 		}
 		fmt.Print("\n")
 	}
-	fmt.Println("----------")
+	fmt.Println("ーーーーーーーーーーーーーー")
 	fmt.Printf("Score: BLACK=%d, WHITE=%d REST=%d\n", g.Board.Score(Black), g.Board.Score(White), g.Board.Rest())
 	fmt.Print("\n")
 }

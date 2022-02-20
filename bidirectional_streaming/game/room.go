@@ -1,6 +1,6 @@
 package game
 
-type Rooms struct {
+type Room struct {
 	ID    int32
 	Host  *Player
 	Guest *Player

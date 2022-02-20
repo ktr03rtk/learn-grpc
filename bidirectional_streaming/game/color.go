@@ -17,7 +17,7 @@ func ColorToStr(c Color) string {
 	case White:
 		return "●"
 	case Empty:
-		return " "
+		return "  "
 	}
 
 	return ""
@@ -28,6 +28,7 @@ func OpponentColor(me Color) Color {
 	case Black:
 		return White
 	case White:
+		return Black
 	}
 
 	panic("invalid state")

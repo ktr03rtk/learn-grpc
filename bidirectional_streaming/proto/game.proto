@@ -43,6 +43,7 @@ message PlayResponse {
   }
   message FinishedEvent {
     Color winner = 1;
+    Board board = 2;
   }
 }
 

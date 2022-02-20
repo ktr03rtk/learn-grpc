@@ -48,7 +48,9 @@ func (b *Board) PutStone(x, y int32, c Color) error {
 			if dx == 0 && dy == 0 {
 				continue
 			}
-			b.TurnStonesByDirection(x, y, c, int32(dx), int32(dy))
+			if b.CountTurnableStonesByDirection(x, y, c, int32(dx), int32(dy)) > 0 {
+				b.TurnStonesByDirection(x, y, c, int32(dx), int32(dy))
+			}
 		}
 	}
 

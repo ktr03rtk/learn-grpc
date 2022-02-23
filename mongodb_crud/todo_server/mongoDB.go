@@ -4,9 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/ktr03rtk/learn-grpc/mongodb_crud/todopb"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type mongoDBHandler struct {
@@ -14,10 +20,18 @@ type mongoDBHandler struct {
 	dbCollection *mongo.Collection
 }
 
+type todoItem struct {
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	UserID   string             `bson:"user_id"`
+	Title    string             `bson:"title"`
+	Detail   string             `bson:"detail"`
+	Deadline time.Time          `bson:"deadline"`
+}
+
 func newMongoDBHandler() (*mongoDBHandler, error) {
 	fmt.Println("Connecting to MongoDB")
 
-	dbClient, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	dbClient, err := mongo.NewClient(options.Client().ApplyURI("mongodb://root:password@localhost:27017"))
 	if err != nil {
 		return nil, err
 	}
@@ -37,4 +51,39 @@ func (h *mongoDBHandler) disconnect() {
 	if err := h.dbClient.Disconnect(context.Background()); err != nil {
 		log.Fatalf("faied to disconnect MongoDB %v", err)
 	}
+}
+
+func (h *mongoDBHandler) CreateTodo(ctx context.Context, req *todopb.CreateTodoRequest) (*todopb.CreateTodoResponse, error) {
+	fmt.Println("create Todo request")
+	todo := req.GetTodo()
+
+	data := todoItem{
+		UserID:   todo.GetUserId(),
+		Title:    todo.GetTitle(),
+		Detail:   todo.GetDetail(),
+		Deadline: time.Unix(todo.GetDeadline().GetSeconds(), int64(todo.GetDeadline().GetNanos())),
+	}
+
+	res, err := h.dbCollection.InsertOne(context.Background(), data)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Internal error: %v", err))
+	}
+
+	oid, ok := res.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "cannot convert OID")
+	}
+
+	return &todopb.CreateTodoResponse{
+		Todo: &todopb.Todo{
+			Id:     oid.Hex(),
+			UserId: todo.GetUserId(),
+			Title:  todo.GetTitle(),
+			Detail: todo.GetDetail(),
+			Deadline: &timestamppb.Timestamp{
+				Seconds: todo.GetDeadline().GetSeconds(),
+				Nanos:   todo.GetDeadline().GetNanos(),
+			},
+		},
+	}, nil
 }

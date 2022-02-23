@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package todo;
+option go_package = "./todopb";
+
+import "google/protobuf/timestamp.proto";
+
+// service TodoService {
+//   rpc CreateTodo(CreateTodoRequest) returns (CreateTodoResponse);
+// }
+
+message Todo {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  string details = 4;
+  google.protobuf.Timestamp deadline = 5;
+}
+
+message CreateTodoRequest {
+  Todo todo = 1;
+}
+
+message CreateTodoResponse {
+  Todo todo = 1;
+}

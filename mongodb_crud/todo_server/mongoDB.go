@@ -155,3 +155,25 @@ func (h *mongoDBHandler) UpdateTodo(ctx context.Context, req *todopb.UpdateTodoR
 		Todo: dataToTodoPb(data),
 	}, nil
 }
+
+func (h *mongoDBHandler) DeleteTodo(ctx context.Context, req *todopb.DeleteTodoRequest) (*todopb.DeleteTodoResponse, error) {
+	fmt.Println("delete Todo request")
+
+	oid, err := primitive.ObjectIDFromHex(req.GetTodoId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "cannot parse ID")
+	}
+
+	filter := bson.M{"_id": oid}
+
+	res, err := h.dbCollection.DeleteOne(ctx, filter)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("cannot delete object in MongoDB: %v", err))
+	}
+
+	if res.DeletedCount == 0 {
+		return nil, status.Errorf(codes.NotFound, "cannot find todo in MongoDB")
+	}
+
+	return &todopb.DeleteTodoResponse{TodoId: req.GetTodoId()}, nil
+}

@@ -96,4 +96,17 @@ func main() {
 	}
 
 	fmt.Printf("todo was updated: %v\n", updateRes)
+
+	// *********************************************
+	// * delete Todo
+	// *********************************************
+	fmt.Println("deleting the todo")
+
+	deletelRes, deleteErr := c.DeleteTodo(context.Background(), &todopb.DeleteTodoRequest{TodoId: todoId})
+
+	if deleteErr != nil {
+		fmt.Printf("failed to delete: %v\n", deleteErr)
+	}
+
+	fmt.Printf("todo was deleted: %v\n", deletelRes)
 }

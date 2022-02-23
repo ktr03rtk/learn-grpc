@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -68,7 +69,7 @@ func main() {
 		TodoId: todoId,
 	})
 	if err != nil {
-		fmt.Printf("failed to read todo: %v\n", err)
+		log.Fatalf("failed to read todo: %v\n", err)
 	}
 
 	fmt.Printf("todo was read: %v\n", readTodoRes)
@@ -92,7 +93,7 @@ func main() {
 
 	updateRes, updateErr := c.UpdateTodo(context.Background(), &todopb.UpdateTodoRequest{Todo: newTodo})
 	if updateErr != nil {
-		fmt.Printf("failed to update: %v\n", updateErr)
+		log.Fatalf("failed to update: %v\n", updateErr)
 	}
 
 	fmt.Printf("todo was updated: %v\n", updateRes)
@@ -105,8 +106,29 @@ func main() {
 	deletelRes, deleteErr := c.DeleteTodo(context.Background(), &todopb.DeleteTodoRequest{TodoId: todoId})
 
 	if deleteErr != nil {
-		fmt.Printf("failed to delete: %v\n", deleteErr)
+		log.Fatalf("failed to delete: %v\n", deleteErr)
 	}
 
 	fmt.Printf("todo was deleted: %v\n", deletelRes)
+
+	// *********************************************
+	// * list Todo
+	// *********************************************
+	fmt.Println("listing the todo")
+
+	stream, err := c.ListTodo(context.Background(), &todopb.ListTodoRequest{})
+	if err != nil {
+		log.Fatalf("failed call ListTodo RPC: %v\n", err)
+	}
+
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			log.Fatalf("failed to receive list data: %v\n", err)
+		}
+
+		fmt.Println(res.GetTodo())
+	}
 }

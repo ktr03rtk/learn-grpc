@@ -177,3 +177,30 @@ func (h *mongoDBHandler) DeleteTodo(ctx context.Context, req *todopb.DeleteTodoR
 
 	return &todopb.DeleteTodoResponse{TodoId: req.GetTodoId()}, nil
 }
+
+func (h *mongoDBHandler) ListTodo(_ *todopb.ListTodoRequest, stream todopb.TodoService_ListTodoServer) error {
+	fmt.Println("list Todo request")
+
+	cur, err := h.dbCollection.Find(context.Background(), primitive.D{{}})
+	if err != nil {
+		return status.Errorf(codes.Internal, fmt.Sprintf("unknown internal error: %v", err))
+	}
+	defer cur.Close(context.Background())
+
+	for cur.Next(context.Background()) {
+		data := &todoItem{}
+		err := cur.Decode(data)
+		if err != nil {
+			return status.Errorf(codes.Internal, fmt.Sprintf("failed to decode data from MongoDB: %v", err))
+		}
+
+		if err := stream.Send(&todopb.ListTodoResponse{Todo: dataToTodoPb(data)}); err != nil {
+			return status.Errorf(codes.Internal, fmt.Sprintf("failed to send data: %v", err))
+		}
+	}
+	if err := cur.Err(); err != nil {
+		return status.Errorf(codes.Internal, fmt.Sprintf("unknown internal error: %v", err))
+	}
+
+	return nil
+}

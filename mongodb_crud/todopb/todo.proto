@@ -10,6 +10,7 @@ service TodoService {
   rpc ReadTodo(ReadTodoRequest) returns (ReadTodoResponse);
   rpc UpdateTodo(UpdateTodoRequest) returns (UpdateTodoResponse);
   rpc DeleteTodo(DeleteTodoRequest) returns (DeleteTodoResponse);
+  rpc ListTodo(ListTodoRequest) returns (stream ListTodoResponse);
 }
 
 message Todo {
@@ -50,4 +51,10 @@ message DeleteTodoRequest {
 
 message DeleteTodoResponse {
   string todo_id = 1;
+}
+
+message ListTodoRequest {}
+
+message ListTodoResponse {
+  Todo todo = 1;
 }

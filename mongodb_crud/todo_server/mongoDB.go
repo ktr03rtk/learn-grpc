@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ktr03rtk/learn-grpc/mongodb_crud/todopb"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -49,7 +50,7 @@ func newMongoDBHandler() (*mongoDBHandler, error) {
 
 func (h *mongoDBHandler) disconnect() {
 	if err := h.dbClient.Disconnect(context.Background()); err != nil {
-		log.Fatalf("faied to disconnect MongoDB %v", err)
+		log.Fatalf("faied to disconnect MongoDB %v\n", err)
 	}
 }
 
@@ -66,7 +67,7 @@ func (h *mongoDBHandler) CreateTodo(ctx context.Context, req *todopb.CreateTodoR
 
 	res, err := h.dbCollection.InsertOne(context.Background(), data)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Internal error: %v", err))
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Internal error: %v\n", err))
 	}
 
 	oid, ok := res.InsertedID.(primitive.ObjectID)
@@ -86,4 +87,39 @@ func (h *mongoDBHandler) CreateTodo(ctx context.Context, req *todopb.CreateTodoR
 			},
 		},
 	}, nil
+}
+
+func (h *mongoDBHandler) ReadTodo(ctx context.Context, req *todopb.ReadTodoRequest) (*todopb.ReadTodoResponse, error) {
+	fmt.Println("read Todo request")
+
+	todoID := req.GetTodoId()
+	oid, err := primitive.ObjectIDFromHex(todoID)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "cannot parse ID")
+	}
+
+	data := &todoItem{}
+	filter := bson.M{"_id": oid}
+
+	res := h.dbCollection.FindOne(context.Background(), filter)
+	if err := res.Decode(data); err != nil {
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("cannot find todo with specified ID: %v\n", err))
+	}
+
+	return &todopb.ReadTodoResponse{
+		Todo: dataToTodoPb(data),
+	}, nil
+}
+
+func dataToTodoPb(data *todoItem) *todopb.Todo {
+	return &todopb.Todo{
+		Id:     data.ID.Hex(),
+		UserId: data.UserID,
+		Title:  data.Title,
+		Detail: data.Detail,
+		Deadline: &timestamppb.Timestamp{
+			Seconds: data.Deadline.Unix(),
+			Nanos:   int32(data.Deadline.Nanosecond()),
+		},
+	}
 }

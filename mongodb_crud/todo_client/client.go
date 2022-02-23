@@ -18,11 +18,16 @@ func main() {
 
 	cc, err := grpc.Dial("localhost:50051", opts)
 	if err != nil {
-		log.Fatalf("failed to connect %v", err)
+		log.Fatalf("failed to connect %v\n", err)
 	}
 	defer cc.Close()
 
 	c := todopb.NewTodoServiceClient(cc)
+
+	// *********************************************
+	// * create Todo
+	// *********************************************
+	fmt.Println("creating the todo")
 
 	now := time.Now()
 	todo := &todopb.Todo{
@@ -35,16 +40,36 @@ func main() {
 		},
 	}
 
-	fmt.Println("createing the todo")
-
-	res, err := c.CreateTodo(context.Background(), &todopb.CreateTodoRequest{
+	createTodoRes, err := c.CreateTodo(context.Background(), &todopb.CreateTodoRequest{
 		Todo: todo,
 	})
 	if err != nil {
-		log.Fatalf("failed to create todo: %v", err)
+		log.Fatalf("failed to create todo: %v\n", err)
 
 	}
 
-	fmt.Printf("todo has been created: %v", res)
+	fmt.Printf("todo has been created: %v\n", createTodoRes)
 
+	todoId := createTodoRes.GetTodo().GetId()
+
+	// *********************************************
+	// * read Todo
+	// *********************************************
+	fmt.Println("read the todo")
+
+	_, readErr := c.ReadTodo(context.Background(), &todopb.ReadTodoRequest{
+		TodoId: "hogehoge",
+	})
+	if readErr != nil {
+		fmt.Printf("failed to read todo: %v\n", readErr)
+	}
+
+	readTodoRes, err := c.ReadTodo(context.Background(), &todopb.ReadTodoRequest{
+		TodoId: todoId,
+	})
+	if err != nil {
+		fmt.Printf("failed to read todo: %v\n", err)
+	}
+
+	fmt.Printf("todo was read: %v\n", readTodoRes)
 }

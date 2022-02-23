@@ -35,7 +35,7 @@ func main() {
 
 	lis, err := net.Listen("tcp", "localhost:50051")
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatalf("failed to listen: %v\n", err)
 	}
 	defer lis.Close()
 
@@ -44,7 +44,7 @@ func main() {
 
 	handler, err := newMongoDBHandler()
 	if err != nil {
-		log.Fatalf("failed to connect to MongoDB: %v", err)
+		log.Fatalf("failed to connect to MongoDB: %v\n", err)
 	}
 	defer handler.disconnect()
 
@@ -53,7 +53,7 @@ func main() {
 	go func() {
 		fmt.Println("starting server...")
 		if err := s.Serve(lis); err != nil {
-			log.Fatalf("failed to serve: %v", err)
+			log.Fatalf("failed to serve: %v\n", err)
 		}
 	}()
 

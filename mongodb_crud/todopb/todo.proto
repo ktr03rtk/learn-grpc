@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 service TodoService {
   rpc CreateTodo(CreateTodoRequest) returns (CreateTodoResponse);
   rpc ReadTodo(ReadTodoRequest) returns (ReadTodoResponse);
+  rpc UpdateTodo(UpdateTodoRequest) returns (UpdateTodoResponse);
 }
 
 message Todo {
@@ -31,5 +32,13 @@ message ReadTodoRequest {
 }
 
 message ReadTodoResponse {
+  Todo todo = 1;
+}
+
+message UpdateTodoRequest {
+  Todo todo = 1;
+}
+
+message UpdateTodoResponse {
   Todo todo = 1;
 }

@@ -123,3 +123,35 @@ func dataToTodoPb(data *todoItem) *todopb.Todo {
 		},
 	}
 }
+
+func (h *mongoDBHandler) UpdateTodo(ctx context.Context, req *todopb.UpdateTodoRequest) (*todopb.UpdateTodoResponse, error) {
+	fmt.Println("update Todo request")
+
+	todo := req.GetTodo()
+	oid, err := primitive.ObjectIDFromHex(todo.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "cannot parse ID")
+	}
+
+	data := &todoItem{}
+	filter := bson.M{"_id": oid}
+
+	res := h.dbCollection.FindOne(ctx, filter)
+	if err = res.Decode(data); err != nil {
+		return nil, status.Errorf(codes.NotFound, "cannot find todo with specified ID: %v", err)
+	}
+
+	data.UserID = todo.GetUserId()
+	data.Title = todo.GetTitle()
+	data.Detail = todo.GetDetail()
+	data.Deadline = time.Unix(todo.GetDeadline().GetSeconds(), int64(todo.GetDeadline().GetNanos()))
+
+	_, updateErr := h.dbCollection.ReplaceOne(ctx, filter, data)
+	if updateErr != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("cannot update object in MongoDB: %v", updateErr))
+	}
+
+	return &todopb.UpdateTodoResponse{
+		Todo: dataToTodoPb(data),
+	}, nil
+}

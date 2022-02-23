@@ -29,14 +29,14 @@ func main() {
 	// *********************************************
 	fmt.Println("creating the todo")
 
-	now := time.Now()
+	deadline := time.Now().AddDate(0, 0, 10)
 	todo := &todopb.Todo{
 		UserId: "abc123",
 		Title:  "buy",
 		Detail: "buy a cup of coffee",
 		Deadline: &timestamp.Timestamp{
-			Seconds: now.Unix(),
-			Nanos:   int32(now.Nanosecond()),
+			Seconds: deadline.Unix(),
+			Nanos:   int32(deadline.Nanosecond()),
 		},
 	}
 
@@ -55,7 +55,7 @@ func main() {
 	// *********************************************
 	// * read Todo
 	// *********************************************
-	fmt.Println("read the todo")
+	fmt.Println("reading the todo")
 
 	_, readErr := c.ReadTodo(context.Background(), &todopb.ReadTodoRequest{
 		TodoId: "hogehoge",
@@ -72,4 +72,28 @@ func main() {
 	}
 
 	fmt.Printf("todo was read: %v\n", readTodoRes)
+
+	// *********************************************
+	// * update Todo
+	// *********************************************
+	fmt.Println("updating the todo")
+
+	newDeadline := time.Now().AddDate(0, 0, 10)
+	newTodo := &todopb.Todo{
+		Id:     todoId,
+		UserId: "changed user",
+		Title:  "sell",
+		Detail: "sell my car",
+		Deadline: &timestamp.Timestamp{
+			Seconds: newDeadline.Unix(),
+			Nanos:   int32(newDeadline.Nanosecond()),
+		},
+	}
+
+	updateRes, updateErr := c.UpdateTodo(context.Background(), &todopb.UpdateTodoRequest{Todo: newTodo})
+	if updateErr != nil {
+		fmt.Printf("failed to update: %v\n", updateErr)
+	}
+
+	fmt.Printf("todo was updated: %v\n", updateRes)
 }

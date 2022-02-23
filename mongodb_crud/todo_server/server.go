@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
@@ -9,48 +8,22 @@ import (
 	"os/signal"
 	"syscall"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 type server struct {
 	*grpc.Server
-	dbClient     *mongo.Client
-	dbCollection *mongo.Collection
 }
 
-func newServer() (*server, error) {
+func newServer() *server {
 	var opts []grpc.ServerOption
 	s := grpc.NewServer(opts...)
-
-	fmt.Println("Connecting to MongoDB")
-
-	dbClient, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	if err != nil {
-		return nil, err
-	}
-	if err := dbClient.Connect(context.Background()); err != nil {
-		return nil, err
-	}
-
-	dbCollection := dbClient.Database("mydb").Collection("todo")
 
 	reflection.Register(s)
 
 	return &server{
 		s,
-		dbClient,
-		dbCollection,
-	}, nil
-}
-
-func (s *server) stop() {
-	defer s.Stop()
-
-	if err := s.dbClient.Disconnect(context.Background()); err != nil {
-		log.Fatalf("faied to disconnect MongoDB %v", err)
 	}
 }
 
@@ -64,11 +37,14 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	server, err := newServer()
+	server := newServer()
+	defer server.Stop()
+
+	handler, err := newMongoDBHandler()
 	if err != nil {
-		log.Fatalf("failed create server: %v", err)
+		log.Fatalf("failed to connect to MongoDB: %v", err)
 	}
-	defer server.stop()
+	defer handler.disconnect()
 
 	go func() {
 		fmt.Println("starting server...")
